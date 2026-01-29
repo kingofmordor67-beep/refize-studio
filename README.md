@@ -1,54 +1,77 @@
-# Monster Adventure - CodeIgniter Edition
+# Monster Adventure - Edisi CodeIgniter
 
-This project has been migrated from React/Node.js to a custom CodeIgniter 4-style PHP framework for Laragon.
+Proyek ini telah dimigrasikan dari React/Node.js ke framework PHP kustom gaya CodeIgniter 4 untuk Laragon.
 
-## 🚀 Setup Instructions
+catatan: Proyek ini menggunakan backend PHP custom.
 
-### 1. Database Setup
-1. Open Laragon and start all services (Apache, MySQL).
-2. Open **HeidiSQL** (or your preferred SQL client).
-3. Connect to your local MySQL server (default: user `root`, no password).
-4. Run the setup script located at:
-   `database/setup.sql`
+## Persyaratan Hosting
+
+PENTING: Proyek ini TIDAK dapat berjalan di Firebase Hosting (paket gratis/statis) karena membutuhkan PHP untuk backend.
+
+Anda membutuhkan server yang mendukung:
+- PHP 7.4 atau lebih baru
+- Database MySQL
+
+Opsi hosting yang disarankan:
+- Shared Hosting (cPanel)
+- VPS (DigitalOcean, Linode)
+- Heroku (dengan PHP buildpack)
+- Railway / Render
+
+## Instruksi Pengaturan
+
+### 1. Pengaturan Database
+1. Buka Laragon dan jalankan semua layanan (Apache, MySQL).
+2. Buka HeidiSQL (atau klien SQL pilihan Anda).
+3. Hubungkan ke server MySQL lokal Anda (default: user root, tanpa password).
+4. Jalankan skrip pengaturan yang terletak di:
+   database/setup.sql
    
-   This will create the `refize_studio` database and seed it with:- 
-   - **Users** (Admin & Test User)
-   - **News** (Sample changelogs)
-   - **Subscribers**
+   Ini akan membuat database refize_studio dan mengisinya dengan:
+   - Pengguna (Admin & User Tes)
+   - Berita (Contoh changelog)
+   - Pelanggan
 
-### 2. Access the Site
-Since you are using Laragon, the site should be automatically available at:
-**http://refize-studio.test**
+### 2. Konfigurasi
+Salin file konfigurasi CMS:
+cp cms/sanity-config.example.php cms/sanity-config.php
 
-(If auto-virtual hosts are disabled, go to `http://localhost/refize-studio/`)
+Edit cms/sanity-config.php dan masukkan kredensial Sanity CMS Anda (Project ID, Dataset, Token).
 
----
+### 3. Akses Situs
+Karena Anda menggunakan Laragon, situs seharusnya tersedia secara otomatis di:
+http://refize-studio.test
 
-## 🔑 Default Credentials
-
-### Admin Account
-- **Email:** `admin@refize.com`
-- **Password:** `admin123`
-
-### User Account
-- **Email:** `user@refize.com`
-- **Password:** `admin123`
+(Jika auto-virtual hosts dinonaktifkan, buka http://localhost/refize-studio/)
 
 ---
 
-## 📂 Project Structure
+## Kredensial Default
 
-- **app/** - Core application logic (MVC)
-  - **Controllers/** - Handle requests (Home, Auth, News)
-  - **Models/** - Database interaction
-  - **Views/** - HTML templates
-- **public/** - Static assets (CSS, JS)
-- **_legacy_backup/** - Backup of original Node.js/React source files
+### Akun Admin
+- Email: admin@refize.com
+- Password: admin123
 
-## ✨ Features
+### Akun User
+- Email: user@refize.com
+- Password: admin123
 
-- **Authentication**: Login, Register, Forgot Password
-- **Evolutionary Story**: Character carousel with 3D tilt effects
-- **Game Log**: News system with creating/editing/deleting (Admin only)
-- **Eye Tracking**: Interactive Monster SVG
-- **Responsive Design**: Mobile-friendly layout
+---
+
+## Struktur Proyek
+
+- app/ - Logika aplikasi inti (MVC)
+  - Controllers/ - Menangani permintaan (Home, Auth, News)
+  - Models/ - Interaksi database
+  - Views/ - Template HTML
+- public/ - Aset statis (CSS, JS)
+- cms/ - Integrasi Sanity CMS
+- database/ - Skrip SQL
+
+## Fitur
+
+- Autentikasi: Login, Daftar, Lupa Password
+- Cerita Evolusioner: Carousel karakter dengan efek tilt 3D
+- Log Permainan: Sistem berita dengan buat/edit/hapus (Khusus Admin)
+- Pelacakan Mata: Monster SVG Interaktif (Kucing Programmer)
+- Desain Responsif: Tata letak ramah seluler dengan dukungan giroskop

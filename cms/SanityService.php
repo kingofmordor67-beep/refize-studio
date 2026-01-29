@@ -66,7 +66,7 @@ class SanityService {
             title,
             version,
             date,
-            "thumb": thumb.asset->url,
+            thumb,
             body
         }';
         
@@ -82,7 +82,7 @@ class SanityService {
             title,
             version,
             date,
-            "thumb": thumb.asset->url,
+            thumb,
             body
         }';
         

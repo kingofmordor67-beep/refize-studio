@@ -78,22 +78,105 @@ function initCustomCursor() {
 }
 
 // ================================
-// MONSTER EYE TRACKING
+// MONSTER EYE TRACKING + PERSONALITY
 // ================================
 function initEyeTracking() {
     const heroMonster = document.getElementById('heroMonster');
     if (!heroMonster) return;
 
-    document.addEventListener('mousemove', (e) => {
-        const pupils = heroMonster.querySelectorAll('.pupil');
-        const xAxis = (window.innerWidth / 2 - e.pageX) / 20;
-        const yAxis = (window.innerHeight / 2 - e.pageY) / 20;
+    const catEyes = document.getElementById('catEyes');
+    const leftPupil = document.getElementById('leftPupil');
+    const rightPupil = document.getElementById('rightPupil');
 
-        pupils.forEach(pupil => {
-            // Larger movement range for bigger cat pupils
-            pupil.style.transform = `translate(${Math.max(-12, Math.min(12, -xAxis))}px, ${Math.max(-10, Math.min(10, -yAxis))}px)`;
-        });
+    let idleTimeout;
+    let wanderInterval;
+    const IDLE_DELAY = 3000;
+
+    function movePupils(x, y) {
+        if (leftPupil) leftPupil.style.transform = `translate(${x}px, ${y}px)`;
+        if (rightPupil) rightPupil.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    function wanderEyes() {
+        if (!leftPupil || !rightPupil) return;
+        const x = (Math.random() - 0.5) * 8;
+        const y = (Math.random() - 0.5) * 5;
+        leftPupil.style.transition = 'transform 0.6s ease-out';
+        rightPupil.style.transition = 'transform 0.6s ease-out';
+        movePupils(x, y);
+    }
+
+    function setIdle() {
+        if (catEyes) catEyes.classList.add('idle');
+        wanderEyes();
+        wanderInterval = setInterval(wanderEyes, 2000);
+    }
+
+    function setActive() {
+        if (catEyes) catEyes.classList.remove('idle');
+        clearTimeout(idleTimeout);
+        clearInterval(wanderInterval);
+        idleTimeout = setTimeout(setIdle, IDLE_DELAY);
+        if (leftPupil) leftPupil.style.transition = 'transform 0.1s ease-out';
+        if (rightPupil) rightPupil.style.transition = 'transform 0.1s ease-out';
+    }
+
+    // Start idle timer
+    idleTimeout = setTimeout(setIdle, IDLE_DELAY);
+
+    // Mouse movement tracking (desktop)
+    document.addEventListener('mousemove', (e) => {
+        setActive();
+        const xAxis = (window.innerWidth / 2 - e.pageX) / 40;
+        const yAxis = (window.innerHeight / 2 - e.pageY) / 60;
+        movePupils(
+            Math.max(-4, Math.min(4, -xAxis)),
+            Math.max(-3, Math.min(3, -yAxis))
+        );
     });
+
+    // ==========================================
+    // MOBILE: Gyroscope/Accelerometer Support
+    // ==========================================
+    let isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    if (isMobile && window.DeviceOrientationEvent) {
+        // Request permission on iOS 13+
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            document.body.addEventListener('click', function requestGyro() {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permission => {
+                        if (permission === 'granted') {
+                            enableGyroscope();
+                        }
+                    });
+                document.body.removeEventListener('click', requestGyro);
+            }, { once: true });
+        } else {
+            enableGyroscope();
+        }
+    }
+
+    function enableGyroscope() {
+        window.addEventListener('deviceorientation', (e) => {
+            setActive();
+            // gamma: left-right tilt (-90 to 90)
+            // beta: front-back tilt (-180 to 180)
+            const gamma = e.gamma || 0;
+            const beta = e.beta || 0;
+
+            // Convert to eye movement range
+            const x = Math.max(-4, Math.min(4, gamma / 15));
+            const y = Math.max(-3, Math.min(3, (beta - 45) / 20)); // 45 is neutral holding angle
+
+            movePupils(x, y);
+        });
+    }
+
+    // Touch interactions still reset idle
+    document.addEventListener('touchstart', setActive);
+    document.addEventListener('touchmove', setActive);
+    document.addEventListener('scroll', setActive);
 }
 
 // ================================
@@ -366,37 +449,81 @@ function switchModal(fromId, toId) {
     setTimeout(() => openModal(toId), 100);
 }
 
-// News Modal - supports both images and YouTube videos
+// News Modal - supports YouTube, Vimeo, direct video files, and images
 function openNewsModal(post) {
     const mediaContainer = document.getElementById('newsModalMedia');
     const thumb = post.thumb || '';
 
-    // Check if it's a YouTube URL
-    const youtubeMatch = thumb.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    // Helper to detect media type from URL
+    function getMediaType(url) {
+        if (!url) return { type: 'none' };
 
-    if (youtubeMatch) {
-        // Render YouTube embed
-        const videoId = youtubeMatch[1];
-        mediaContainer.innerHTML = `
-            <iframe 
-                src="https://www.youtube.com/embed/${videoId}?autoplay=0" 
-                style="width: 100%; height: 100%; border: none;"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
-            </iframe>`;
-    } else if (thumb) {
-        // Render image
-        mediaContainer.innerHTML = `
-            <img src="${thumb}" 
-                style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;" 
-                alt="Cover"
-                onerror="this.src='https://via.placeholder.com/800x400?text=No+Image+Available'">`;
-    } else {
-        // Fallback placeholder
-        mediaContainer.innerHTML = `
-            <img src="https://via.placeholder.com/800x400?text=No+Media" 
-                style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;" 
-                alt="No media">`;
+        // YouTube detection (watch, youtu.be, embed, shorts)
+        const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const ytMatch = url.match(youtubeRegex);
+        if (ytMatch) return { type: 'youtube', id: ytMatch[1] };
+
+        // Vimeo detection
+        const vimeoRegex = /vimeo\.com\/(?:video\/)?(\d+)/;
+        const vimeoMatch = url.match(vimeoRegex);
+        if (vimeoMatch) return { type: 'vimeo', id: vimeoMatch[1] };
+
+        // Direct video file detection
+        const videoExtensions = /\.(mp4|webm|ogg|mov|avi|mkv)(\?.*)?$/i;
+        if (videoExtensions.test(url)) return { type: 'video', url: url };
+
+        // Everything else treated as image (with fallback on error)
+        return { type: 'image', url: url };
+    }
+
+    const media = getMediaType(thumb);
+
+    switch (media.type) {
+        case 'youtube':
+            mediaContainer.innerHTML = `
+                <iframe
+                    src="https://www.youtube.com/embed/${media.id}?rel=0"
+                    style="width: 100%; height: 100%; border: none;"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>`;
+            break;
+
+        case 'vimeo':
+            mediaContainer.innerHTML = `
+                <iframe
+                    src="https://player.vimeo.com/video/${media.id}"
+                    style="width: 100%; height: 100%; border: none;"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowfullscreen>
+                </iframe>`;
+            break;
+
+        case 'video':
+            mediaContainer.innerHTML = `
+                <video
+                    src="${media.url}"
+                    style="width: 100%; height: 100%; object-fit: cover;"
+                    controls
+                    preload="metadata">
+                    Your browser does not support video playback.
+                </video>`;
+            break;
+
+        case 'image':
+            mediaContainer.innerHTML = `
+                <img
+                    src="${media.url}"
+                    style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;"
+                    alt="Cover"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:#888;\\'>Unable to load media</div>';">`;
+            break;
+
+        default:
+            mediaContainer.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">
+                    <span>No media available</span>
+                </div>`;
     }
 
     document.getElementById('newsModalVersion').textContent = post.version;

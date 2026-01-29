@@ -1,0 +1,27 @@
+# System Files
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+refize-studio-web/node_modules/
+vendor/
+
+# Environment & Config with Secrets
+.env
+cms/sanity-config.php
+
+# IDE & Editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Logs & Temp
+logs/
+tmp/
+*.log
+
+# Sanity
+refize-studio-web/dist/
+refize-studio-web/.sanity/

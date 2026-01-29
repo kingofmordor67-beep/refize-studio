@@ -20,9 +20,9 @@ export default {
         },
         {
             name: 'thumb',
-            title: 'Thumbnail URL',
+            title: 'Media URL',
             type: 'url',
-            description: 'Paste a full URL like https://example.com/image.jpg'
+            description: 'YouTube, Vimeo, or direct image/video URL (e.g. https://youtube.com/watch?v=xxx or https://example.com/image.jpg)'
         },
         {
             name: 'body',
